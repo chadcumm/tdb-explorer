@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { DecimalPipe } from '@angular/common';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Subscription, switchMap } from 'rxjs';
 import { TdbDataService } from '../../services/tdb-data.service';
-import { TdbRequest, Category } from '../../models/tdb-request.model';
+import { TdbRequest } from '../../models/tdb-request.model';
 
 @Component({
   selector: 'app-request-detail',
@@ -356,32 +356,6 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
     }
     .flow-arrow { flex-shrink: 0; }
 
-    /* ═══ Badge (same as list) ═══ */
-    .badge {
-      display: inline-block;
-      padding: 1px var(--sp-2);
-      border-radius: var(--radius-sm);
-      font-size: 0.6875rem;
-      font-weight: 500;
-    }
-    .badge[data-category="clinical-event"] { background: var(--cat-clinical-event-bg); color: var(--cat-clinical-event-fg); }
-    .badge[data-category="orders"] { background: var(--cat-orders-bg); color: var(--cat-orders-fg); }
-    .badge[data-category="messaging"] { background: var(--cat-messaging-bg); color: var(--cat-messaging-fg); }
-    .badge[data-category="code-values"] { background: var(--cat-code-values-bg); color: var(--cat-code-values-fg); }
-    .badge[data-category="encounter"] { background: var(--cat-encounter-bg); color: var(--cat-encounter-fg); }
-    .badge[data-category="web-services"] { background: var(--cat-web-services-bg); color: var(--cat-web-services-fg); }
-    .badge[data-category="pharmacy"] { background: var(--cat-pharmacy-bg); color: var(--cat-pharmacy-fg); }
-    .badge[data-category="configuration"] { background: var(--cat-configuration-bg); color: var(--cat-configuration-fg); }
-    .badge[data-category="eks"] { background: var(--cat-eks-bg); color: var(--cat-eks-fg); }
-    .badge[data-category="radiology"] { background: var(--cat-radiology-bg); color: var(--cat-radiology-fg); }
-    .badge[data-category="materials"] { background: var(--cat-materials-bg); color: var(--cat-materials-fg); }
-    .badge[data-category="scheduling"] { background: var(--cat-scheduling-bg); color: var(--cat-scheduling-fg); }
-    .badge[data-category="personnel"] { background: var(--cat-personnel-bg); color: var(--cat-personnel-fg); }
-    .badge[data-category="printing"] { background: var(--cat-printing-bg); color: var(--cat-printing-fg); }
-    .badge[data-category="patient-accounting"] { background: var(--cat-patient-accounting-bg); color: var(--cat-patient-accounting-fg); }
-    .badge[data-category="education"] { background: var(--cat-education-bg); color: var(--cat-education-fg); }
-    .badge[data-category="surgery"] { background: var(--cat-surgery-bg); color: var(--cat-surgery-fg); }
-    .badge[data-category="other"] { background: var(--cat-other-bg); color: var(--cat-other-fg); }
 
     /* ═══ Description ═══ */
     .description {
@@ -482,7 +456,6 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
       color: var(--ink-secondary);
       font-size: 0.75rem;
     }
-    .mono { font-family: var(--font-mono); }
 
     /* ═══ Record block ═══ */
     .record-block {
@@ -499,27 +472,8 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
     .field-sep { color: var(--ink-muted); }
     .field-type { color: var(--accent); }
 
-    /* ═══ Table ═══ */
-    .table-wrapper { overflow-x: auto; }
-    .data-table { width: 100%; border-collapse: collapse; }
-    .data-table th {
-      text-align: left;
-      padding: var(--sp-2) var(--sp-3);
-      border-bottom: 1px solid var(--border-emphasis);
-      color: var(--ink-tertiary);
-      font-size: 0.6875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-    .data-table td {
-      padding: var(--sp-2) var(--sp-3);
-      border-bottom: 1px solid var(--border-soft);
-      color: var(--ink-secondary);
-      font-size: 0.75rem;
-    }
+    .data-table td { font-size: 0.75rem; }
     .accent { color: var(--accent); }
-    .text-muted { color: var(--ink-muted); }
 
     /* ═══ Related ═══ */
     .related-grid { display: flex; flex-wrap: wrap; gap: var(--sp-2); }
@@ -540,38 +494,37 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
       border-color: var(--accent-dim);
     }
 
-    .empty-state {
-      text-align: center;
-      padding: var(--sp-12);
-      color: var(--ink-muted);
-    }
   `]
 })
-export class RequestDetailComponent implements OnInit {
+export class RequestDetailComponent implements OnInit, OnDestroy {
   request: TdbRequest | null = null;
-  categories: Category[] = [];
   loaded = false;
   showRequestRecord = false;
   showReplyRecord = false;
   uniqueCallers: string[] = [];
+  private subs: Subscription[] = [];
 
   constructor(private route: ActivatedRoute, private dataService: TdbDataService) {}
 
   ngOnInit(): void {
-    this.dataService.getCategories().subscribe(cats => this.categories = cats);
-    this.route.params.subscribe(params => {
-      const reqid = Number(params['reqid']);
-      this.dataService.getRequestById(reqid).subscribe(req => {
+    this.subs.push(
+      this.route.params.pipe(
+        switchMap(params => this.dataService.getRequestById(Number(params['reqid'])))
+      ).subscribe(req => {
         this.request = req || null;
         this.loaded = true;
         if (req) {
           this.uniqueCallers = [...new Set(req.usages.map(u => u.program_name))];
         }
-      });
-    });
+      })
+    );
+  }
+
+  ngOnDestroy(): void {
+    this.subs.forEach(s => s.unsubscribe());
   }
 
   getCategoryName(id: string): string {
-    return this.categories.find(c => c.id === id)?.name || id;
+    return this.dataService.getCategoryName(id);
   }
 }

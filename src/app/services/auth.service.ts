@@ -1,4 +1,4 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import {
   CognitoUserPool,
   CognitoUser,
@@ -12,6 +12,10 @@ import {
   clearCernerToolsCookie,
 } from './cookie.utils';
 
+const COOKIE_ID_TOKEN = 'ct_id_token';
+const COOKIE_REFRESH_TOKEN = 'ct_refresh_token';
+const COOKIE_USER_EMAIL = 'ct_user_email';
+
 export interface AuthUser {
   email: string;
 }
@@ -19,15 +23,17 @@ export interface AuthUser {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly currentUser = signal<AuthUser | null>(null);
-  readonly isAuthenticated = signal(false);
+  readonly isAuthenticated = computed(() => this.currentUser() !== null);
   readonly isLoading = signal(true);
   readonly needsNewPassword = signal(false);
+  readonly isConfigured: boolean;
 
   private userPool: CognitoUserPool | null = null;
   private cognitoUser: CognitoUser | null = null;
 
   constructor() {
-    if (environment.cognito.userPoolId) {
+    this.isConfigured = !!environment.cognito.userPoolId;
+    if (this.isConfigured) {
       this.userPool = new CognitoUserPool({
         UserPoolId: environment.cognito.userPoolId,
         ClientId: environment.cognito.clientId,
@@ -41,24 +47,23 @@ export class AuthService {
   private writeCookies(session: CognitoUserSession, email: string): void {
     const idToken = session.getIdToken().getJwtToken();
     const refreshToken = session.getRefreshToken().getToken();
-    setCernerToolsCookie('ct_id_token', idToken, 7);
-    setCernerToolsCookie('ct_refresh_token', refreshToken, 30);
-    setCernerToolsCookie('ct_user_email', email, 30);
+    setCernerToolsCookie(COOKIE_ID_TOKEN, idToken, 7);
+    setCernerToolsCookie(COOKIE_REFRESH_TOKEN, refreshToken, 30);
+    setCernerToolsCookie(COOKIE_USER_EMAIL, email, 30);
   }
 
   private clearCookies(): void {
-    clearCernerToolsCookie('ct_id_token');
-    clearCernerToolsCookie('ct_refresh_token');
-    clearCernerToolsCookie('ct_user_email');
+    clearCernerToolsCookie(COOKIE_ID_TOKEN);
+    clearCernerToolsCookie(COOKIE_REFRESH_TOKEN);
+    clearCernerToolsCookie(COOKIE_USER_EMAIL);
   }
 
   private restoreSession(): void {
-    const cookieEmail = getCernerToolsCookie('ct_user_email');
-    const cookieToken = getCernerToolsCookie('ct_id_token');
+    const cookieEmail = getCernerToolsCookie(COOKIE_USER_EMAIL);
+    const cookieToken = getCernerToolsCookie(COOKIE_ID_TOKEN);
 
     if (cookieEmail && cookieToken) {
       this.currentUser.set({ email: cookieEmail });
-      this.isAuthenticated.set(true);
       this.isLoading.set(false);
       return;
     }
@@ -76,7 +81,6 @@ export class AuthService {
       this.cognitoUser = user;
       const email = user.getUsername();
       this.currentUser.set({ email });
-      this.isAuthenticated.set(true);
       this.writeCookies(session, email);
     });
   }
@@ -99,7 +103,6 @@ export class AuthService {
         onSuccess: (session) => {
           this.cognitoUser = user;
           this.currentUser.set({ email });
-          this.isAuthenticated.set(true);
           this.needsNewPassword.set(false);
           this.writeCookies(session, email);
           resolve();
@@ -124,7 +127,6 @@ export class AuthService {
         onSuccess: (session) => {
           const email = this.cognitoUser!.getUsername();
           this.currentUser.set({ email });
-          this.isAuthenticated.set(true);
           this.needsNewPassword.set(false);
           this.writeCookies(session, email);
           resolve();
@@ -171,7 +173,6 @@ export class AuthService {
     this.cognitoUser?.signOut();
     this.cognitoUser = null;
     this.currentUser.set(null);
-    this.isAuthenticated.set(false);
     this.clearCookies();
   }
 }

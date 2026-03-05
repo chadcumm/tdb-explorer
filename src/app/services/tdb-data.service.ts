@@ -6,7 +6,6 @@ import { TdbDatabase, TdbRequest, Category, Usage } from '../models/tdb-request.
 export interface ScriptInfo {
   programName: string;
   repository: string;
-  requestCount: number;
   reqids: number[];
   files: string[];
 }
@@ -15,11 +14,20 @@ export interface ScriptInfo {
 export class TdbDataService {
   private data$: Observable<TdbDatabase>;
   private searchTerm$ = new BehaviorSubject<string>('');
+  private categoryNameMap = new Map<string, string>();
 
   constructor(private http: HttpClient) {
     this.data$ = this.http
       .get<TdbDatabase>('data/tdb-requests.json')
-      .pipe(shareReplay(1));
+      .pipe(
+        map(db => {
+          for (const cat of db.categories) {
+            this.categoryNameMap.set(cat.id, cat.name);
+          }
+          return db;
+        }),
+        shareReplay(1),
+      );
   }
 
   getDatabase(): Observable<TdbDatabase> {
@@ -32,6 +40,10 @@ export class TdbDataService {
 
   getCategories(): Observable<Category[]> {
     return this.data$.pipe(map(db => db.categories));
+  }
+
+  getCategoryName(id: string): string {
+    return this.categoryNameMap.get(id) ?? id;
   }
 
   getRequestById(reqid: number): Observable<TdbRequest | undefined> {
@@ -49,29 +61,7 @@ export class TdbDataService {
   getScripts(): Observable<ScriptInfo[]> {
     return this.data$.pipe(
       map(db => {
-        const scriptMap = new Map<string, ScriptInfo>();
-        for (const req of db.requests) {
-          for (const usage of req.usages) {
-            const key = usage.program_name;
-            if (!scriptMap.has(key)) {
-              scriptMap.set(key, {
-                programName: usage.program_name,
-                repository: usage.repository,
-                requestCount: 0,
-                reqids: [],
-                files: [],
-              });
-            }
-            const info = scriptMap.get(key)!;
-            if (!info.reqids.includes(req.reqid)) {
-              info.reqids.push(req.reqid);
-              info.requestCount++;
-            }
-            if (!info.files.includes(usage.file)) {
-              info.files.push(usage.file);
-            }
-          }
-        }
+        const scriptMap = this.buildScriptMap(db.requests);
         return [...scriptMap.values()].sort((a, b) =>
           a.programName.localeCompare(b.programName)
         );
@@ -99,31 +89,52 @@ export class TdbDataService {
           r.usages.some(u => u.program_name.toLowerCase().includes(lower))
         );
 
-        const scriptMap = new Map<string, ScriptInfo>();
-        for (const req of db.requests) {
-          for (const usage of req.usages) {
-            if (usage.program_name.toLowerCase().includes(lower)) {
-              const key = usage.program_name;
-              if (!scriptMap.has(key)) {
-                scriptMap.set(key, {
-                  programName: usage.program_name,
-                  repository: usage.repository,
-                  requestCount: 0,
-                  reqids: [],
-                  files: [],
-                });
-              }
-              const info = scriptMap.get(key)!;
-              if (!info.reqids.includes(req.reqid)) {
-                info.reqids.push(req.reqid);
-                info.requestCount++;
-              }
-            }
-          }
-        }
+        const filtered = db.requests.filter(r =>
+          r.usages.some(u => u.program_name.toLowerCase().includes(lower))
+        );
+        const scriptMap = this.buildScriptMap(filtered, u =>
+          u.program_name.toLowerCase().includes(lower)
+        );
 
         return { requests, scripts: [...scriptMap.values()] };
       })
     );
+  }
+
+  private buildScriptMap(
+    requests: TdbRequest[],
+    usageFilter?: (u: Usage) => boolean,
+  ): Map<string, ScriptInfo> {
+    const scriptMap = new Map<string, ScriptInfo>();
+    const reqidSets = new Map<string, Set<number>>();
+    const fileSets = new Map<string, Set<string>>();
+
+    for (const req of requests) {
+      for (const usage of req.usages) {
+        if (usageFilter && !usageFilter(usage)) continue;
+        const key = usage.program_name;
+        if (!scriptMap.has(key)) {
+          scriptMap.set(key, {
+            programName: usage.program_name,
+            repository: usage.repository,
+            reqids: [],
+            files: [],
+          });
+          reqidSets.set(key, new Set());
+          fileSets.set(key, new Set());
+        }
+        const rSet = reqidSets.get(key)!;
+        if (!rSet.has(req.reqid)) {
+          rSet.add(req.reqid);
+          scriptMap.get(key)!.reqids.push(req.reqid);
+        }
+        const fSet = fileSets.get(key)!;
+        if (!fSet.has(usage.file)) {
+          fSet.add(usage.file);
+          scriptMap.get(key)!.files.push(usage.file);
+        }
+      }
+    }
+    return scriptMap;
   }
 }

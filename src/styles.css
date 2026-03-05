@@ -137,3 +137,99 @@ mark {
   background: rgba(212, 165, 116, 0.25);
   color: var(--ink-primary);
 }
+
+/* ── Shared: Category badges ── */
+.badge {
+  display: inline-block;
+  padding: 1px var(--sp-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.badge[data-category="clinical-event"] { background: var(--cat-clinical-event-bg); color: var(--cat-clinical-event-fg); }
+.badge[data-category="orders"] { background: var(--cat-orders-bg); color: var(--cat-orders-fg); }
+.badge[data-category="messaging"] { background: var(--cat-messaging-bg); color: var(--cat-messaging-fg); }
+.badge[data-category="code-values"] { background: var(--cat-code-values-bg); color: var(--cat-code-values-fg); }
+.badge[data-category="encounter"] { background: var(--cat-encounter-bg); color: var(--cat-encounter-fg); }
+.badge[data-category="web-services"] { background: var(--cat-web-services-bg); color: var(--cat-web-services-fg); }
+.badge[data-category="pharmacy"] { background: var(--cat-pharmacy-bg); color: var(--cat-pharmacy-fg); }
+.badge[data-category="configuration"] { background: var(--cat-configuration-bg); color: var(--cat-configuration-fg); }
+.badge[data-category="eks"] { background: var(--cat-eks-bg); color: var(--cat-eks-fg); }
+.badge[data-category="radiology"] { background: var(--cat-radiology-bg); color: var(--cat-radiology-fg); }
+.badge[data-category="materials"] { background: var(--cat-materials-bg); color: var(--cat-materials-fg); }
+.badge[data-category="scheduling"] { background: var(--cat-scheduling-bg); color: var(--cat-scheduling-fg); }
+.badge[data-category="personnel"] { background: var(--cat-personnel-bg); color: var(--cat-personnel-fg); }
+.badge[data-category="printing"] { background: var(--cat-printing-bg); color: var(--cat-printing-fg); }
+.badge[data-category="patient-accounting"] { background: var(--cat-patient-accounting-bg); color: var(--cat-patient-accounting-fg); }
+.badge[data-category="education"] { background: var(--cat-education-bg); color: var(--cat-education-fg); }
+.badge[data-category="surgery"] { background: var(--cat-surgery-bg); color: var(--cat-surgery-fg); }
+.badge[data-category="other"] { background: var(--cat-other-bg); color: var(--cat-other-fg); }
+
+/* ── Shared: Data tables ── */
+.table-wrapper { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left;
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--border-emphasis);
+  color: var(--ink-tertiary);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.data-table td {
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--border-soft);
+  color: var(--ink-secondary);
+  font-size: 0.8125rem;
+}
+.sortable { cursor: pointer; user-select: none; }
+.sortable:hover { color: var(--accent); }
+.sort-indicator {
+  font-size: 0.5625rem;
+  margin-left: var(--sp-1);
+  color: var(--accent);
+}
+.mono { font-family: var(--font-mono); font-size: 0.75rem; }
+.text-muted { color: var(--ink-muted); }
+.empty-state {
+  text-align: center;
+  padding: var(--sp-12);
+  color: var(--ink-muted);
+  font-size: 0.8125rem;
+}
+
+/* ── Shared: Filter input ── */
+.filter-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 380px;
+}
+.filter-icon {
+  position: absolute;
+  left: var(--sp-3);
+  color: var(--ink-muted);
+  pointer-events: none;
+}
+.filter-input {
+  width: 100%;
+  padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-8);
+  background: var(--control-bg);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-md);
+  color: var(--ink-primary);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  outline: none;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+.filter-input:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 2px var(--control-focus-ring);
+}
+.filter-input::placeholder { color: var(--ink-muted); }

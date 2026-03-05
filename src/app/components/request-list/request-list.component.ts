@@ -192,77 +192,13 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
     }
 
     .filter-row { display: flex; }
-    .filter-wrapper {
-      position: relative;
-      display: flex;
-      align-items: center;
-      width: 100%;
-      max-width: 380px;
-    }
-    .filter-icon {
-      position: absolute;
-      left: var(--sp-3);
-      color: var(--ink-muted);
-      pointer-events: none;
-    }
-    .filter-input {
-      width: 100%;
-      padding: var(--sp-2) var(--sp-3) var(--sp-2) var(--sp-8);
-      background: var(--control-bg);
-      border: 1px solid var(--control-border);
-      border-radius: var(--radius-md);
-      color: var(--ink-primary);
-      font-family: var(--font-body);
-      font-size: 0.8125rem;
-      outline: none;
-      transition: border-color 0.12s, box-shadow 0.12s;
-    }
-    .filter-input:focus {
-      border-color: var(--border-focus);
-      box-shadow: 0 0 0 2px var(--control-focus-ring);
-    }
-    .filter-input::placeholder { color: var(--ink-muted); }
-
-    /* ── Table ── */
-    .table-wrapper { overflow-x: auto; }
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    .data-table th {
-      text-align: left;
-      padding: var(--sp-2) var(--sp-3);
-      border-bottom: 1px solid var(--border-emphasis);
-      color: var(--ink-tertiary);
-      font-size: 0.6875rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      white-space: nowrap;
-    }
-    .sortable { cursor: pointer; user-select: none; }
-    .sortable:hover { color: var(--accent); }
-    .sort-indicator {
-      font-size: 0.5625rem;
-      margin-left: var(--sp-1);
-      color: var(--accent);
-    }
-    .data-table td {
-      padding: var(--sp-2) var(--sp-3);
-      border-bottom: 1px solid var(--border-soft);
-      color: var(--ink-secondary);
-      font-size: 0.8125rem;
-    }
     .row-link {
       cursor: pointer;
       transition: background 0.08s;
     }
     .row-link:hover td { background: var(--surface-1); }
 
-    .cell-mono {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-    }
+    .cell-mono { font-family: var(--font-mono); font-size: 0.75rem; }
     .cell-reqid { color: var(--accent); font-weight: 500; }
     .cell-name {
       max-width: 320px;
@@ -280,40 +216,11 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
     .cell-callers { text-align: right; }
     .handler-name { color: var(--ink-secondary); }
     .caller-count { color: var(--ink-secondary); }
-    .text-muted { color: var(--ink-muted); }
 
     .col-reqid { width: 80px; }
     .col-cat { width: 200px; }
     .col-handler { width: 180px; }
     .col-callers { width: 64px; text-align: right; }
-
-    /* ── Badge ── */
-    .badge {
-      display: inline-block;
-      padding: 1px var(--sp-2);
-      border-radius: var(--radius-sm);
-      font-size: 0.6875rem;
-      font-weight: 500;
-      letter-spacing: 0.01em;
-    }
-    .badge[data-category="clinical-event"] { background: var(--cat-clinical-event-bg); color: var(--cat-clinical-event-fg); }
-    .badge[data-category="orders"] { background: var(--cat-orders-bg); color: var(--cat-orders-fg); }
-    .badge[data-category="messaging"] { background: var(--cat-messaging-bg); color: var(--cat-messaging-fg); }
-    .badge[data-category="code-values"] { background: var(--cat-code-values-bg); color: var(--cat-code-values-fg); }
-    .badge[data-category="encounter"] { background: var(--cat-encounter-bg); color: var(--cat-encounter-fg); }
-    .badge[data-category="web-services"] { background: var(--cat-web-services-bg); color: var(--cat-web-services-fg); }
-    .badge[data-category="pharmacy"] { background: var(--cat-pharmacy-bg); color: var(--cat-pharmacy-fg); }
-    .badge[data-category="configuration"] { background: var(--cat-configuration-bg); color: var(--cat-configuration-fg); }
-    .badge[data-category="eks"] { background: var(--cat-eks-bg); color: var(--cat-eks-fg); }
-    .badge[data-category="radiology"] { background: var(--cat-radiology-bg); color: var(--cat-radiology-fg); }
-    .badge[data-category="materials"] { background: var(--cat-materials-bg); color: var(--cat-materials-fg); }
-    .badge[data-category="scheduling"] { background: var(--cat-scheduling-bg); color: var(--cat-scheduling-fg); }
-    .badge[data-category="personnel"] { background: var(--cat-personnel-bg); color: var(--cat-personnel-fg); }
-    .badge[data-category="printing"] { background: var(--cat-printing-bg); color: var(--cat-printing-fg); }
-    .badge[data-category="patient-accounting"] { background: var(--cat-patient-accounting-bg); color: var(--cat-patient-accounting-fg); }
-    .badge[data-category="education"] { background: var(--cat-education-bg); color: var(--cat-education-fg); }
-    .badge[data-category="surgery"] { background: var(--cat-surgery-bg); color: var(--cat-surgery-fg); }
-    .badge[data-category="other"] { background: var(--cat-other-bg); color: var(--cat-other-fg); }
 
     /* ── Tags ── */
     .cell-tags { display: flex; flex-wrap: wrap; gap: var(--sp-1); }
@@ -379,13 +286,6 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
       font-size: 0.6875rem;
       color: var(--ink-muted);
     }
-
-    .empty-state {
-      text-align: center;
-      padding: var(--sp-12);
-      color: var(--ink-muted);
-      font-size: 0.8125rem;
-    }
   `]
 })
 export class RequestListComponent implements OnInit, OnDestroy {
@@ -400,6 +300,7 @@ export class RequestListComponent implements OnInit, OnDestroy {
   currentPage = 1;
   totalPages = 1;
   paginatedRequests: TdbRequest[] = [];
+  categoryCountMap = new Map<string, number>();
   private subs: Subscription[] = [];
 
   constructor(private dataService: TdbDataService, private route: ActivatedRoute) {}
@@ -410,15 +311,25 @@ export class RequestListComponent implements OnInit, OnDestroy {
         this.allRequests = db.requests;
         this.categories = db.categories;
 
-        this.route.queryParams.subscribe(params => {
-          if (params['q']) {
-            this.filterText = params['q'];
-          }
-          if (params['category']) {
-            this.activeCategory = params['category'];
-          }
+        this.categoryCountMap.clear();
+        for (const req of db.requests) {
+          this.categoryCountMap.set(req.category_id, (this.categoryCountMap.get(req.category_id) ?? 0) + 1);
+        }
+
+        this.applyFilters();
+      })
+    );
+    this.subs.push(
+      this.route.queryParams.subscribe(params => {
+        if (params['q']) {
+          this.filterText = params['q'];
+        }
+        if (params['category']) {
+          this.activeCategory = params['category'];
+        }
+        if (this.allRequests.length > 0) {
           this.applyFilters();
-        });
+        }
       })
     );
   }
@@ -443,9 +354,9 @@ export class RequestListComponent implements OnInit, OnDestroy {
         String(r.reqid).includes(lower) ||
         r.name.toLowerCase().includes(lower) ||
         r.description.toLowerCase().includes(lower) ||
-        r.category_id.includes(lower) ||
-        r.tags.some(t => t.includes(lower)) ||
-        r.usages.some(u => u.program_name.includes(lower))
+        r.category_id.toLowerCase().includes(lower) ||
+        r.tags.some(t => t.toLowerCase().includes(lower)) ||
+        r.usages.some(u => u.program_name.toLowerCase().includes(lower))
       );
     }
     this.sortRequests(filtered);
@@ -504,10 +415,10 @@ export class RequestListComponent implements OnInit, OnDestroy {
   }
 
   getCategoryName(id: string): string {
-    return this.categories.find(c => c.id === id)?.name || id;
+    return this.dataService.getCategoryName(id);
   }
 
   getCategoryCount(id: string): number {
-    return this.allRequests.filter(r => r.category_id === id).length;
+    return this.categoryCountMap.get(id) ?? 0;
   }
 }

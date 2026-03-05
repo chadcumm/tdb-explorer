@@ -1,33 +1,22 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
+import { toObservable } from '@angular/core/rxjs-interop';
+import { filter, first, map } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 export const authGuard: CanActivateFn = () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
-  // Local dev mode — no auth configured
-  if (!auth['userPool']) return true;
+  if (!auth.isConfigured) return true;
 
-  // Wait for session restore to finish
   if (auth.isLoading()) {
-    return new Promise<boolean>((resolve) => {
-      const check = setInterval(() => {
-        if (!auth.isLoading()) {
-          clearInterval(check);
-          if (auth.isAuthenticated()) {
-            resolve(true);
-          } else {
-            router.navigate(['/login']);
-            resolve(false);
-          }
-        }
-      }, 50);
-    });
+    return toObservable(auth.isLoading).pipe(
+      filter(loading => !loading),
+      first(),
+      map(() => auth.isAuthenticated() || router.createUrlTree(['/login'])),
+    );
   }
 
-  if (auth.isAuthenticated()) return true;
-
-  router.navigate(['/login']);
-  return false;
+  return auth.isAuthenticated() || router.createUrlTree(['/login']);
 };
