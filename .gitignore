@@ -1,0 +1,22 @@
+# Dependencies
+/node_modules
+
+# Build output
+/dist
+/.angular
+
+# IDE
+.idea
+*.swp
+*.swo
+
+# Environment
+.env
+.env.local
+
+# SST
+.sst
+
+# OS
+.DS_Store
+Thumbs.db
