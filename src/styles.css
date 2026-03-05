@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+/* ═══════════════════════════════════════════
+   TDB Explorer — "The Schematic"
+   Design tokens for a system cartography tool
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* ── Surfaces ── */
+  --canvas: #0c0e12;
+  --surface-1: #12151b;
+  --surface-2: #181c24;
+  --surface-3: #1e222c;
+
+  /* ── Foreground ── */
+  --ink-primary: #d0d4dc;
+  --ink-secondary: #8e95a4;
+  --ink-tertiary: #5c6370;
+  --ink-muted: #3c4250;
+
+  /* ── Borders ── */
+  --border: rgba(140, 150, 170, 0.08);
+  --border-soft: rgba(140, 150, 170, 0.05);
+  --border-emphasis: rgba(140, 150, 170, 0.14);
+  --border-focus: rgba(212, 165, 116, 0.5);
+
+  /* ── Accent: Amber ── */
+  --accent: #d4a574;
+  --accent-dim: #a07850;
+  --accent-muted: rgba(212, 165, 116, 0.12);
+  --accent-subtle: rgba(212, 165, 116, 0.06);
+
+  /* ── Semantic ── */
+  --signal-success: #6a9e78;
+  --signal-warning: #b89c62;
+  --signal-error: #a06a6a;
+  --signal-info: #6a88a0;
+
+  /* ── Category indicators (desaturated, systematic) ── */
+  --cat-clinical-event-bg: #141e1a;
+  --cat-clinical-event-fg: #6a9e78;
+  --cat-orders-bg: #1e1a14;
+  --cat-orders-fg: #b09468;
+  --cat-messaging-bg: #14181e;
+  --cat-messaging-fg: #6882a0;
+  --cat-code-values-bg: #1a141e;
+  --cat-code-values-fg: #8a6ea0;
+  --cat-encounter-bg: #1a1c14;
+  --cat-encounter-fg: #8a9460;
+  --cat-web-services-bg: #141c1e;
+  --cat-web-services-fg: #608e94;
+  --cat-pharmacy-bg: #1e1418;
+  --cat-pharmacy-fg: #a06878;
+  --cat-configuration-bg: #1e1c14;
+  --cat-configuration-fg: #b0a060;
+  --cat-eks-bg: #141a1e;
+  --cat-eks-fg: #608894;
+  --cat-radiology-bg: #14161e;
+  --cat-radiology-fg: #6878a0;
+  --cat-materials-bg: #1c141e;
+  --cat-materials-fg: #8868a0;
+  --cat-scheduling-bg: #141e1c;
+  --cat-scheduling-fg: #609488;
+  --cat-personnel-bg: #18141e;
+  --cat-personnel-fg: #7868a0;
+  --cat-printing-bg: #14141e;
+  --cat-printing-fg: #6068a0;
+  --cat-patient-accounting-bg: #1e1616;
+  --cat-patient-accounting-fg: #a07070;
+  --cat-education-bg: #161e16;
+  --cat-education-fg: #70a070;
+  --cat-surgery-bg: #1e1814;
+  --cat-surgery-fg: #a08060;
+  --cat-other-bg: #16161a;
+  --cat-other-fg: #70707a;
+
+  /* ── Controls ── */
+  --control-bg: #0e1016;
+  --control-border: rgba(140, 150, 170, 0.10);
+  --control-focus-ring: rgba(212, 165, 116, 0.3);
+
+  /* ── Spacing (4px base) ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+
+  /* ── Radius ── */
+  --radius-sm: 3px;
+  --radius-md: 5px;
+  --radius-lg: 8px;
+
+  /* ── Typography ── */
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-body);
+  background: var(--canvas);
+  color: var(--ink-primary);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: inherit; }
+
+mark {
+  background: rgba(212, 165, 116, 0.2);
+  color: var(--accent);
+  padding: 0 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--canvas); }
+::-webkit-scrollbar-thumb { background: var(--ink-muted); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--ink-tertiary); }
+
+/* ── Selection ── */
+::selection {
+  background: rgba(212, 165, 116, 0.25);
+  color: var(--ink-primary);
+}
