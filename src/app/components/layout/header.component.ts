@@ -1,5 +1,4 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TdbDataService } from '../../services/tdb-data.service';
@@ -8,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, RouterLinkActive, FormsModule],
+  imports: [RouterLink, RouterLinkActive, FormsModule],
   template: `
     <header class="header">
       <div class="header-left">
@@ -30,10 +29,12 @@ import { AuthService } from '../../services/auth.service';
         </nav>
       </div>
       <div class="header-right">
-        <div class="auth-controls" *ngIf="auth.isAuthenticated$ | async">
-          <span class="auth-email">{{ (auth.currentUser$ | async)?.email }}</span>
-          <button class="sign-out-btn" (click)="signOut()">Sign Out</button>
-        </div>
+        @if (auth.isAuthenticated()) {
+          <div class="auth-controls">
+            <span class="auth-email">{{ auth.currentUser()?.email }}</span>
+            <button class="sign-out-btn" (click)="signOut()">Sign Out</button>
+          </div>
+        }
         <div class="search-wrapper">
           <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
@@ -46,7 +47,9 @@ import { AuthService } from '../../services/auth.service';
             (ngModelChange)="onSearch($event)"
             (keydown.enter)="goToSearch()"
           />
-          <kbd class="search-hint" *ngIf="!searchTerm">Enter</kbd>
+          @if (!searchTerm) {
+            <kbd class="search-hint">Enter</kbd>
+          }
         </div>
       </div>
     </header>
@@ -139,6 +142,7 @@ import { AuthService } from '../../services/auth.service';
       position: relative;
       display: flex;
       align-items: center;
+      width: 360px;
     }
     .search-icon {
       position: absolute;
@@ -180,9 +184,11 @@ import { AuthService } from '../../services/auth.service';
   `]
 })
 export class HeaderComponent {
-  searchTerm = '';
+  auth = inject(AuthService);
+  private dataService = inject(TdbDataService);
+  private router = inject(Router);
 
-  constructor(public auth: AuthService, private dataService: TdbDataService, private router: Router) {}
+  searchTerm = '';
 
   onSearch(term: string): void {
     this.dataService.setSearchTerm(term);

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TdbDataService, ScriptInfo } from '../../services/tdb-data.service';
@@ -7,7 +7,7 @@ import { TdbDataService, ScriptInfo } from '../../services/tdb-data.service';
 @Component({
   selector: 'app-script-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [DecimalPipe, RouterLink, FormsModule],
   template: `
     <div class="container">
       <div class="page-header">
@@ -49,20 +49,28 @@ import { TdbDataService, ScriptInfo } from '../../services/tdb-data.service';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let script of filteredScripts">
-              <td class="mono cell-program">{{ script.programName }}</td>
-              <td class="cell-repo">{{ script.repository }}</td>
-              <td class="mono col-num">{{ script.requestCount }}</td>
-              <td class="cell-reqids">
-                <a *ngFor="let rid of script.reqids.slice(0, 10)" [routerLink]="['/request', rid]" class="reqid-link">{{ rid }}</a>
-                <span *ngIf="script.reqids.length > 10" class="overflow-count">+{{ script.reqids.length - 10 }}</span>
-              </td>
-            </tr>
+            @for (script of filteredScripts; track script.programName) {
+              <tr>
+                <td class="mono cell-program">{{ script.programName }}</td>
+                <td class="cell-repo">{{ script.repository }}</td>
+                <td class="mono col-num">{{ script.requestCount }}</td>
+                <td class="cell-reqids">
+                  @for (rid of script.reqids.slice(0, 10); track rid) {
+                    <a [routerLink]="['/request', rid]" class="reqid-link">{{ rid }}</a>
+                  }
+                  @if (script.reqids.length > 10) {
+                    <span class="overflow-count">+{{ script.reqids.length - 10 }}</span>
+                  }
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>
 
-      <div *ngIf="filteredScripts.length === 0" class="empty-state">No scripts match your filter.</div>
+      @if (filteredScripts.length === 0) {
+        <div class="empty-state">No scripts match your filter.</div>
+      }
     </div>
   `,
   styles: [`

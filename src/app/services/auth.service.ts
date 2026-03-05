@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import {
   CognitoUserPool,
   CognitoUser,
@@ -11,7 +11,6 @@ import {
   getCernerToolsCookie,
   clearCernerToolsCookie,
 } from './cookie.utils';
-import { BehaviorSubject } from 'rxjs';
 
 export interface AuthUser {
   email: string;
@@ -19,34 +18,13 @@ export interface AuthUser {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private currentUserSubject = new BehaviorSubject<AuthUser | null>(null);
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
-  private isLoadingSubject = new BehaviorSubject<boolean>(true);
-  private needsNewPasswordSubject = new BehaviorSubject<boolean>(false);
-
-  readonly currentUser$ = this.currentUserSubject.asObservable();
-  readonly isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
-  readonly isLoading$ = this.isLoadingSubject.asObservable();
-  readonly needsNewPassword$ = this.needsNewPasswordSubject.asObservable();
+  readonly currentUser = signal<AuthUser | null>(null);
+  readonly isAuthenticated = signal(false);
+  readonly isLoading = signal(true);
+  readonly needsNewPassword = signal(false);
 
   private userPool: CognitoUserPool | null = null;
   private cognitoUser: CognitoUser | null = null;
-
-  get isAuthenticated(): boolean {
-    return this.isAuthenticatedSubject.value;
-  }
-
-  get isLoading(): boolean {
-    return this.isLoadingSubject.value;
-  }
-
-  get currentUser(): AuthUser | null {
-    return this.currentUserSubject.value;
-  }
-
-  get needsNewPassword(): boolean {
-    return this.needsNewPasswordSubject.value;
-  }
 
   constructor() {
     if (environment.cognito.userPoolId) {
@@ -56,7 +34,7 @@ export class AuthService {
       });
       this.restoreSession();
     } else {
-      this.isLoadingSubject.next(false);
+      this.isLoading.set(false);
     }
   }
 
@@ -79,26 +57,26 @@ export class AuthService {
     const cookieToken = getCernerToolsCookie('ct_id_token');
 
     if (cookieEmail && cookieToken) {
-      this.currentUserSubject.next({ email: cookieEmail });
-      this.isAuthenticatedSubject.next(true);
-      this.isLoadingSubject.next(false);
+      this.currentUser.set({ email: cookieEmail });
+      this.isAuthenticated.set(true);
+      this.isLoading.set(false);
       return;
     }
 
     const user = this.userPool?.getCurrentUser();
     if (!user) {
-      this.isLoadingSubject.next(false);
+      this.isLoading.set(false);
       return;
     }
 
     user.getSession((err: Error | null, session: CognitoUserSession | null) => {
-      this.isLoadingSubject.next(false);
+      this.isLoading.set(false);
       if (err || !session?.isValid()) return;
 
       this.cognitoUser = user;
       const email = user.getUsername();
-      this.currentUserSubject.next({ email });
-      this.isAuthenticatedSubject.next(true);
+      this.currentUser.set({ email });
+      this.isAuthenticated.set(true);
       this.writeCookies(session, email);
     });
   }
@@ -120,9 +98,9 @@ export class AuthService {
       user.authenticateUser(authDetails, {
         onSuccess: (session) => {
           this.cognitoUser = user;
-          this.currentUserSubject.next({ email });
-          this.isAuthenticatedSubject.next(true);
-          this.needsNewPasswordSubject.next(false);
+          this.currentUser.set({ email });
+          this.isAuthenticated.set(true);
+          this.needsNewPassword.set(false);
           this.writeCookies(session, email);
           resolve();
         },
@@ -131,7 +109,7 @@ export class AuthService {
         },
         newPasswordRequired: () => {
           this.cognitoUser = user;
-          this.needsNewPasswordSubject.next(true);
+          this.needsNewPassword.set(true);
           resolve();
         },
       });
@@ -145,9 +123,9 @@ export class AuthService {
       this.cognitoUser.completeNewPasswordChallenge(newPassword, {}, {
         onSuccess: (session) => {
           const email = this.cognitoUser!.getUsername();
-          this.currentUserSubject.next({ email });
-          this.isAuthenticatedSubject.next(true);
-          this.needsNewPasswordSubject.next(false);
+          this.currentUser.set({ email });
+          this.isAuthenticated.set(true);
+          this.needsNewPassword.set(false);
           this.writeCookies(session, email);
           resolve();
         },
@@ -192,8 +170,8 @@ export class AuthService {
   signOut(): void {
     this.cognitoUser?.signOut();
     this.cognitoUser = null;
-    this.currentUserSubject.next(null);
-    this.isAuthenticatedSubject.next(false);
+    this.currentUser.set(null);
+    this.isAuthenticated.set(false);
     this.clearCookies();
   }
 }

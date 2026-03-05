@@ -1,16 +1,30 @@
 import { Routes } from '@angular/router';
-import { RequestListComponent } from './components/request-list/request-list.component';
-import { RequestDetailComponent } from './components/request-detail/request-detail.component';
-import { ScriptListComponent } from './components/script-list/script-list.component';
-import { CategoryViewComponent } from './components/category-view/category-view.component';
-import { LoginComponent } from './pages/login/login.component';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
-  { path: 'login', component: LoginComponent },
-  { path: '', component: RequestListComponent, canActivate: [authGuard] },
-  { path: 'request/:reqid', component: RequestDetailComponent, canActivate: [authGuard] },
-  { path: 'scripts', component: ScriptListComponent, canActivate: [authGuard] },
-  { path: 'categories', component: CategoryViewComponent, canActivate: [authGuard] },
+  {
+    path: 'login',
+    loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent),
+  },
+  {
+    path: '',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/request-list/request-list.component').then(m => m.RequestListComponent),
+  },
+  {
+    path: 'request/:reqid',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/request-detail/request-detail.component').then(m => m.RequestDetailComponent),
+  },
+  {
+    path: 'scripts',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/script-list/script-list.component').then(m => m.ScriptListComponent),
+  },
+  {
+    path: 'categories',
+    canActivate: [authGuard],
+    loadComponent: () => import('./components/category-view/category-view.component').then(m => m.CategoryViewComponent),
+  },
   { path: '**', redirectTo: '' },
 ];

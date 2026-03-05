@@ -21,7 +21,7 @@ export default $config({
     new sst.aws.StaticSite("TdbExplorerSite", {
       build: {
         command: "npm run build",
-        output: "dist/tdb-explorer",
+        output: "dist/tdb-explorer/browser",
       },
       domain: "tdb-explorer.cernertools.com",
       environment: {

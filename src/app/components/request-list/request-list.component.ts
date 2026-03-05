@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Subscription } from 'rxjs';
@@ -9,7 +9,7 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
 @Component({
   selector: 'app-request-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [DecimalPipe, RouterLink, FormsModule],
   template: `
     <div class="container">
       <div class="page-header">
@@ -27,15 +27,16 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
             (click)="filterByCategory(null)">
             All
           </button>
-          <button
-            *ngFor="let cat of categories"
-            class="chip"
-            [class.active]="activeCategory === cat.id"
-            [attr.data-category]="cat.id"
-            (click)="filterByCategory(cat.id)">
-            {{ cat.name }}
-            <span class="chip-count">{{ getCategoryCount(cat.id) }}</span>
-          </button>
+          @for (cat of categories; track cat.id) {
+            <button
+              class="chip"
+              [class.active]="activeCategory === cat.id"
+              [attr.data-category]="cat.id"
+              (click)="filterByCategory(cat.id)">
+              {{ cat.name }}
+              <span class="chip-count">{{ getCategoryCount(cat.id) }}</span>
+            </button>
+          }
         </div>
         <div class="filter-row">
           <div class="filter-wrapper">
@@ -74,31 +75,42 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let req of paginatedRequests" [routerLink]="['/request', req.reqid]" class="row-link">
-              <td class="cell-mono cell-reqid">{{ req.reqid }}</td>
-              <td class="cell-name">{{ req.name }}</td>
-              <td>
-                <span class="badge" [attr.data-category]="req.category_id">
-                  {{ getCategoryName(req.category_id) }}
-                </span>
-              </td>
-              <td class="cell-mono cell-handler">
-                <span *ngIf="req.handler" class="handler-name">{{ req.handler.program_name }}</span>
-                <span *ngIf="!req.handler" class="text-muted">&mdash;</span>
-              </td>
-              <td class="cell-mono cell-callers">
-                <span *ngIf="req.usages.length > 0" class="caller-count">{{ req.usages.length }}</span>
-                <span *ngIf="req.usages.length === 0" class="text-muted">0</span>
-              </td>
-              <td class="cell-tags">
-                <span *ngFor="let tag of req.tags.slice(0, 3)" class="tag">{{ tag }}</span>
-              </td>
-            </tr>
+            @for (req of paginatedRequests; track req.reqid) {
+              <tr [routerLink]="['/request', req.reqid]" class="row-link">
+                <td class="cell-mono cell-reqid">{{ req.reqid }}</td>
+                <td class="cell-name">{{ req.name }}</td>
+                <td>
+                  <span class="badge" [attr.data-category]="req.category_id">
+                    {{ getCategoryName(req.category_id) }}
+                  </span>
+                </td>
+                <td class="cell-mono cell-handler">
+                  @if (req.handler) {
+                    <span class="handler-name">{{ req.handler.program_name }}</span>
+                  } @else {
+                    <span class="text-muted">&mdash;</span>
+                  }
+                </td>
+                <td class="cell-mono cell-callers">
+                  @if (req.usages.length > 0) {
+                    <span class="caller-count">{{ req.usages.length }}</span>
+                  } @else {
+                    <span class="text-muted">0</span>
+                  }
+                </td>
+                <td class="cell-tags">
+                  @for (tag of req.tags.slice(0, 3); track tag) {
+                    <span class="tag">{{ tag }}</span>
+                  }
+                </td>
+              </tr>
+            }
           </tbody>
         </table>
       </div>
 
-      <div class="pagination" *ngIf="totalPages > 1">
+      @if (totalPages > 1) {
+      <div class="pagination">
         <div class="page-controls">
           <button class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(1)">First</button>
           <button class="page-btn" [disabled]="currentPage === 1" (click)="goToPage(currentPage - 1)">Prev</button>
@@ -116,10 +128,13 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
           <span class="page-size-label">per page</span>
         </div>
       </div>
+      }
 
-      <div *ngIf="filteredRequests.length === 0" class="empty-state">
+      @if (filteredRequests.length === 0) {
+      <div class="empty-state">
         No requests match your filters.
       </div>
+      }
     </div>
   `,
   styles: [`

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { TdbDataService } from '../../services/tdb-data.service';
 import { Category } from '../../models/tdb-request.model';
@@ -12,14 +12,15 @@ interface CategoryCard {
 @Component({
   selector: 'app-category-view',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [DecimalPipe, RouterLink],
   template: `
     <div class="container">
       <div class="page-header">
         <h1>Categories</h1>
       </div>
 
-      <div class="stats-row" *ngIf="stats">
+      @if (stats) {
+      <div class="stats-row">
         <div class="stat">
           <span class="stat-value">{{ stats.totalRequests | number }}</span>
           <span class="stat-label">Request IDs</span>
@@ -40,10 +41,11 @@ interface CategoryCard {
           <span class="stat-label">Categories</span>
         </div>
       </div>
+      }
 
       <div class="grid">
+        @for (card of cards; track card.category.id) {
         <a
-          *ngFor="let card of cards"
           [routerLink]="['/']"
           [queryParams]="{ category: card.category.id }"
           class="card"
@@ -55,6 +57,7 @@ interface CategoryCard {
           <div class="card-name">{{ card.category.name }}</div>
           <div class="card-desc">{{ card.category.description }}</div>
         </a>
+        }
       </div>
     </div>
   `,

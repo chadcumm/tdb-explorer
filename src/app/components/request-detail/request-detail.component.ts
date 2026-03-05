@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DecimalPipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { TdbDataService } from '../../services/tdb-data.service';
 import { TdbRequest, Category } from '../../models/tdb-request.model';
@@ -7,9 +7,10 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
 @Component({
   selector: 'app-request-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [RouterLink],
   template: `
-    <div class="container" *ngIf="request">
+    @if (request) {
+    <div class="container">
       <a routerLink="/" class="back-link">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="m15 18-6-6 6-6"/>
@@ -21,17 +22,22 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
       <div class="flow-diagram">
         <div class="flow-column flow-callers">
           <div class="flow-label">Callers</div>
-          <div class="flow-items" *ngIf="request.usages.length > 0">
-            <div *ngFor="let u of uniqueCallers.slice(0, 6)" class="flow-node flow-node-caller">
-              <span class="flow-node-name">{{ u }}</span>
-            </div>
-            <div *ngIf="uniqueCallers.length > 6" class="flow-overflow">
-              +{{ uniqueCallers.length - 6 }} more
-            </div>
+          @if (request.usages.length > 0) {
+          <div class="flow-items">
+            @for (u of uniqueCallers.slice(0, 6); track u) {
+              <div class="flow-node flow-node-caller">
+                <span class="flow-node-name">{{ u }}</span>
+              </div>
+            }
+            @if (uniqueCallers.length > 6) {
+              <div class="flow-overflow">+{{ uniqueCallers.length - 6 }} more</div>
+            }
           </div>
-          <div class="flow-items" *ngIf="request.usages.length === 0">
+          } @else {
+          <div class="flow-items">
             <div class="flow-node flow-node-empty">No callers found</div>
           </div>
+          }
         </div>
 
         <div class="flow-connector">
@@ -61,16 +67,23 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
 
         <div class="flow-column flow-handler">
           <div class="flow-label">Handler</div>
-          <div *ngIf="request.handler" class="flow-node flow-node-handler">
-            <span class="flow-node-name">{{ request.handler.program_name }}</span>
-            <span class="flow-node-meta" *ngIf="request.handler.purpose">{{ request.handler.purpose }}</span>
-          </div>
-          <div *ngIf="!request.handler" class="flow-node flow-node-empty">No handler registered</div>
+          @if (request.handler) {
+            <div class="flow-node flow-node-handler">
+              <span class="flow-node-name">{{ request.handler.program_name }}</span>
+              @if (request.handler.purpose) {
+                <span class="flow-node-meta">{{ request.handler.purpose }}</span>
+              }
+            </div>
+          } @else {
+            <div class="flow-node flow-node-empty">No handler registered</div>
+          }
         </div>
       </div>
 
       <!-- ═══ Description ═══ -->
-      <p class="description" *ngIf="request.description">{{ request.description }}</p>
+      @if (request.description) {
+        <p class="description">{{ request.description }}</p>
+      }
 
       <!-- ═══ Meta ═══ -->
       <div class="meta-row">
@@ -86,73 +99,95 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
           <span class="meta-label">Callers</span>
           <span class="meta-value">{{ request.usages.length }}</span>
         </div>
-        <div class="meta-item" *ngIf="request.tags.length > 0">
-          <span class="meta-label">Tags</span>
-          <span class="meta-value tags-inline">
-            <span *ngFor="let tag of request.tags" class="tag">{{ tag }}</span>
-          </span>
-        </div>
+        @if (request.tags.length > 0) {
+          <div class="meta-item">
+            <span class="meta-label">Tags</span>
+            <span class="meta-value tags-inline">
+              @for (tag of request.tags; track tag) {
+                <span class="tag">{{ tag }}</span>
+              }
+            </span>
+          </div>
+        }
       </div>
 
       <!-- ═══ Handler Detail ═══ -->
-      <div class="section" *ngIf="request.handler">
-        <h2 class="section-heading">Handler Script</h2>
-        <div class="detail-card handler-card">
-          <div class="detail-row">
-            <span class="detail-label">Program</span>
-            <span class="detail-value mono">{{ request.handler.program_name }}</span>
-          </div>
-          <div class="detail-row" *ngIf="request.handler.purpose">
-            <span class="detail-label">Purpose</span>
-            <span class="detail-value">{{ request.handler.purpose }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">File</span>
-            <span class="detail-value mono">{{ request.handler.file }}</span>
-          </div>
-          <div class="detail-row">
-            <span class="detail-label">Repository</span>
-            <span class="detail-value">{{ request.handler.repository }}</span>
-          </div>
-          <div class="detail-row" *ngIf="request.handler.product">
-            <span class="detail-label">Product</span>
-            <span class="detail-value">{{ request.handler.product }}</span>
-          </div>
-          <div class="detail-row" *ngIf="request.handler.product_team">
-            <span class="detail-label">Team</span>
-            <span class="detail-value">{{ request.handler.product_team }}</span>
-          </div>
-          <div class="detail-row" *ngIf="request.handler.task_id">
-            <span class="detail-label">Task ID</span>
-            <span class="detail-value mono">{{ request.handler.task_id }}</span>
+      @if (request.handler) {
+        <div class="section">
+          <h2 class="section-heading">Handler Script</h2>
+          <div class="detail-card handler-card">
+            <div class="detail-row">
+              <span class="detail-label">Program</span>
+              <span class="detail-value mono">{{ request.handler.program_name }}</span>
+            </div>
+            @if (request.handler.purpose) {
+              <div class="detail-row">
+                <span class="detail-label">Purpose</span>
+                <span class="detail-value">{{ request.handler.purpose }}</span>
+              </div>
+            }
+            <div class="detail-row">
+              <span class="detail-label">File</span>
+              <span class="detail-value mono">{{ request.handler.file }}</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Repository</span>
+              <span class="detail-value">{{ request.handler.repository }}</span>
+            </div>
+            @if (request.handler.product) {
+              <div class="detail-row">
+                <span class="detail-label">Product</span>
+                <span class="detail-value">{{ request.handler.product }}</span>
+              </div>
+            }
+            @if (request.handler.product_team) {
+              <div class="detail-row">
+                <span class="detail-label">Team</span>
+                <span class="detail-value">{{ request.handler.product_team }}</span>
+              </div>
+            }
+            @if (request.handler.task_id) {
+              <div class="detail-row">
+                <span class="detail-label">Task ID</span>
+                <span class="detail-value mono">{{ request.handler.task_id }}</span>
+              </div>
+            }
           </div>
         </div>
-      </div>
+      }
 
       <!-- ═══ Record Structures ═══ -->
-      <div class="section" *ngIf="request.request_record">
-        <h2 class="section-heading collapsible" (click)="showRequestRecord = !showRequestRecord">
-          <svg [class.rotated]="showRequestRecord" class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m9 18 6-6-6-6"/>
-          </svg>
-          Request Record
-          <span class="record-name">{{ request.request_record.name }}</span>
-        </h2>
-        <pre *ngIf="showRequestRecord" class="record-block"><ng-container *ngFor="let f of request.request_record.fields"><span class="field-name">{{ f.name }}</span> <span class="field-sep">=</span> <span class="field-type">{{ f.type }}</span>
-</ng-container></pre>
-      </div>
+      @if (request.request_record) {
+        <div class="section">
+          <h2 class="section-heading collapsible" (click)="showRequestRecord = !showRequestRecord">
+            <svg [class.rotated]="showRequestRecord" class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+            Request Record
+            <span class="record-name">{{ request.request_record.name }}</span>
+          </h2>
+          @if (showRequestRecord) {
+            <pre class="record-block">@for (f of request.request_record.fields; track f.name) {<span class="field-name">{{ f.name }}</span> <span class="field-sep">=</span> <span class="field-type">{{ f.type }}</span>
+}</pre>
+          }
+        </div>
+      }
 
-      <div class="section" *ngIf="request.reply_record">
-        <h2 class="section-heading collapsible" (click)="showReplyRecord = !showReplyRecord">
-          <svg [class.rotated]="showReplyRecord" class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m9 18 6-6-6-6"/>
-          </svg>
-          Reply Record
-          <span class="record-name">{{ request.reply_record.name }}</span>
-        </h2>
-        <pre *ngIf="showReplyRecord" class="record-block"><ng-container *ngFor="let f of request.reply_record.fields"><span class="field-name">{{ f.name }}</span> <span class="field-sep">=</span> <span class="field-type">{{ f.type }}</span>
-</ng-container></pre>
-      </div>
+      @if (request.reply_record) {
+        <div class="section">
+          <h2 class="section-heading collapsible" (click)="showReplyRecord = !showReplyRecord">
+            <svg [class.rotated]="showReplyRecord" class="chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"/>
+            </svg>
+            Reply Record
+            <span class="record-name">{{ request.reply_record.name }}</span>
+          </h2>
+          @if (showReplyRecord) {
+            <pre class="record-block">@for (f of request.reply_record.fields; track f.name) {<span class="field-name">{{ f.name }}</span> <span class="field-sep">=</span> <span class="field-type">{{ f.type }}</span>
+}</pre>
+          }
+        </div>
+      }
 
       <!-- ═══ Usages ═══ -->
       <div class="section">
@@ -169,30 +204,39 @@ import { TdbRequest, Category } from '../../models/tdb-request.model';
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let u of request.usages">
+              @for (u of request.usages; track $index) {
+              <tr>
                 <td class="mono accent">{{ u.program_name }}</td>
                 <td class="mono">{{ u.file }}</td>
                 <td class="mono">{{ u.line }}</td>
                 <td class="mono text-muted">{{ u.subroutine || '\u2014' }}</td>
                 <td>{{ u.repository }}</td>
               </tr>
+              }
             </tbody>
           </table>
         </div>
       </div>
 
       <!-- ═══ Related ═══ -->
-      <div class="section" *ngIf="request.related_reqids.length > 0">
-        <h2 class="section-heading">Related Requests</h2>
-        <div class="related-grid">
-          <a *ngFor="let rid of request.related_reqids" [routerLink]="['/request', rid]" class="related-link">{{ rid }}</a>
+      @if (request.related_reqids.length > 0) {
+        <div class="section">
+          <h2 class="section-heading">Related Requests</h2>
+          <div class="related-grid">
+            @for (rid of request.related_reqids; track rid) {
+              <a [routerLink]="['/request', rid]" class="related-link">{{ rid }}</a>
+            }
+          </div>
         </div>
-      </div>
+      }
     </div>
+    }
 
-    <div class="container" *ngIf="!request && loaded">
-      <div class="empty-state">Request not found.</div>
-    </div>
+    @if (!request && loaded) {
+      <div class="container">
+        <div class="empty-state">Request not found.</div>
+      </div>
+    }
   `,
   styles: [`
     .container {

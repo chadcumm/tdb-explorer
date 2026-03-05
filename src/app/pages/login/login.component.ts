@@ -1,118 +1,114 @@
-import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule],
   template: `
     <div class="login-shell">
       <div class="login-card">
         <p class="login-label">TDB Explorer</p>
-        <h1 class="login-title" [ngSwitch]="view">
-          <span *ngSwitchCase="'forgotRequest'">Reset Password</span>
-          <span *ngSwitchCase="'forgotConfirm'">Enter Code</span>
-          <span *ngSwitchDefault>Sign In</span>
+        <h1 class="login-title">
+          @switch (view()) {
+            @case ('forgotRequest') { Reset Password }
+            @case ('forgotConfirm') { Enter Code }
+            @default { Sign In }
+          }
         </h1>
         <p class="login-subtitle">tdb-explorer.cernertools.com</p>
 
-        <!-- Forced password change -->
-        <ng-container *ngIf="auth.needsNewPassword">
+        @if (auth.needsNewPassword()) {
           <p class="new-pw-msg">Please set a new password to continue.</p>
           <input
             type="password"
             placeholder="New password"
             class="login-input"
-            [value]="newPassword"
-            (input)="newPassword = getValue($event)"
+            [value]="newPassword()"
+            (input)="newPassword.set(getValue($event))"
             (keydown.enter)="completeNewPassword()"
           />
           <button
             (click)="completeNewPassword()"
-            [disabled]="loading"
+            [disabled]="loading()"
             class="login-btn"
-          >{{ loading ? 'Setting password...' : 'Set Password' }}</button>
-        </ng-container>
+          >{{ loading() ? 'Setting password...' : 'Set Password' }}</button>
+        } @else {
+          @switch (view()) {
+            @case ('forgotRequest') {
+              <p class="login-hint">Enter your email and we'll send a verification code.</p>
+              <input
+                type="email"
+                placeholder="Email"
+                class="login-input"
+                [value]="email()"
+                (input)="email.set(getValue($event))"
+                (keydown.enter)="requestResetCode()"
+              />
+              <button (click)="requestResetCode()" [disabled]="loading()" class="login-btn">
+                {{ loading() ? 'Sending code...' : 'Send Code' }}
+              </button>
+              <button (click)="view.set('login'); errorMsg.set(''); successMsg.set('')" class="login-btn-secondary">
+                Back to Sign In
+              </button>
+            }
+            @case ('forgotConfirm') {
+              <p class="login-hint">Check your email for a verification code.</p>
+              <input
+                type="text"
+                placeholder="Verification code"
+                class="login-input"
+                [value]="resetCode()"
+                (input)="resetCode.set(getValue($event))"
+              />
+              <input
+                type="password"
+                placeholder="New password"
+                class="login-input"
+                [value]="newPassword()"
+                (input)="newPassword.set(getValue($event))"
+                (keydown.enter)="confirmResetPassword()"
+              />
+              <button (click)="confirmResetPassword()" [disabled]="loading()" class="login-btn">
+                {{ loading() ? 'Resetting...' : 'Reset Password' }}
+              </button>
+              <button (click)="view.set('forgotRequest'); errorMsg.set(''); successMsg.set('')" class="login-btn-secondary">
+                Back
+              </button>
+            }
+            @default {
+              <input
+                type="email"
+                placeholder="Email"
+                class="login-input"
+                [value]="email()"
+                (input)="email.set(getValue($event))"
+                (keydown.enter)="signIn()"
+              />
+              <input
+                type="password"
+                placeholder="Password"
+                class="login-input"
+                [value]="password()"
+                (input)="password.set(getValue($event))"
+                (keydown.enter)="signIn()"
+              />
+              <button (click)="signIn()" [disabled]="loading()" class="login-btn">
+                {{ loading() ? 'Signing in...' : 'Sign In' }}
+              </button>
+              <button (click)="view.set('forgotRequest'); errorMsg.set('')" class="login-link">
+                Forgot password?
+              </button>
+            }
+          }
+        }
 
-        <!-- Normal flow -->
-        <ng-container *ngIf="!auth.needsNewPassword" [ngSwitch]="view">
-
-          <!-- Forgot: request code -->
-          <ng-container *ngSwitchCase="'forgotRequest'">
-            <p class="login-hint">Enter your email and we'll send a verification code.</p>
-            <input
-              type="email"
-              placeholder="Email"
-              class="login-input"
-              [value]="email"
-              (input)="email = getValue($event)"
-              (keydown.enter)="requestResetCode()"
-            />
-            <button (click)="requestResetCode()" [disabled]="loading" class="login-btn">
-              {{ loading ? 'Sending code...' : 'Send Code' }}
-            </button>
-            <button (click)="view = 'login'; errorMsg = ''; successMsg = ''" class="login-btn-secondary">
-              Back to Sign In
-            </button>
-          </ng-container>
-
-          <!-- Forgot: confirm code -->
-          <ng-container *ngSwitchCase="'forgotConfirm'">
-            <p class="login-hint">Check your email for a verification code.</p>
-            <input
-              type="text"
-              placeholder="Verification code"
-              class="login-input"
-              [value]="resetCode"
-              (input)="resetCode = getValue($event)"
-            />
-            <input
-              type="password"
-              placeholder="New password"
-              class="login-input"
-              [value]="newPassword"
-              (input)="newPassword = getValue($event)"
-              (keydown.enter)="confirmResetPassword()"
-            />
-            <button (click)="confirmResetPassword()" [disabled]="loading" class="login-btn">
-              {{ loading ? 'Resetting...' : 'Reset Password' }}
-            </button>
-            <button (click)="view = 'forgotRequest'; errorMsg = ''; successMsg = ''" class="login-btn-secondary">
-              Back
-            </button>
-          </ng-container>
-
-          <!-- Standard login -->
-          <ng-container *ngSwitchDefault>
-            <input
-              type="email"
-              placeholder="Email"
-              class="login-input"
-              [value]="email"
-              (input)="email = getValue($event)"
-              (keydown.enter)="signIn()"
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              class="login-input"
-              [value]="password"
-              (input)="password = getValue($event)"
-              (keydown.enter)="signIn()"
-            />
-            <button (click)="signIn()" [disabled]="loading" class="login-btn">
-              {{ loading ? 'Signing in...' : 'Sign In' }}
-            </button>
-            <button (click)="view = 'forgotRequest'; errorMsg = ''" class="login-link">
-              Forgot password?
-            </button>
-          </ng-container>
-        </ng-container>
-
-        <p *ngIf="errorMsg" class="login-error">{{ errorMsg }}</p>
-        <p *ngIf="successMsg" class="login-success">{{ successMsg }}</p>
+        @if (errorMsg()) {
+          <p class="login-error">{{ errorMsg() }}</p>
+        }
+        @if (successMsg()) {
+          <p class="login-success">{{ successMsg() }}</p>
+        }
       </div>
     </div>
   `,
@@ -172,9 +168,7 @@ import { AuthService } from '../../services/auth.service';
       outline: none;
       box-sizing: border-box;
     }
-    .login-input:focus {
-      border-color: var(--accent);
-    }
+    .login-input:focus { border-color: var(--accent); }
     .login-btn {
       width: 100%;
       padding: 0.5rem 0.75rem;
@@ -213,91 +207,84 @@ import { AuthService } from '../../services/auth.service';
       transition: color 0.12s;
     }
     .login-link:hover { color: var(--accent); }
-    .login-error {
-      font-size: 0.75rem;
-      color: #dc2626;
-      margin: 0.75rem 0 0;
-    }
-    .login-success {
-      font-size: 0.75rem;
-      color: #16a34a;
-      margin: 0.75rem 0 0;
-    }
+    .login-error { font-size: 0.75rem; color: #dc2626; margin: 0.75rem 0 0; }
+    .login-success { font-size: 0.75rem; color: #16a34a; margin: 0.75rem 0 0; }
   `]
 })
 export class LoginComponent {
-  view: 'login' | 'forgotRequest' | 'forgotConfirm' = 'login';
-  email = '';
-  password = '';
-  newPassword = '';
-  resetCode = '';
-  loading = false;
-  errorMsg = '';
-  successMsg = '';
+  auth = inject(AuthService);
+  private router = inject(Router);
 
-  constructor(public auth: AuthService, private router: Router) {}
+  readonly view = signal<'login' | 'forgotRequest' | 'forgotConfirm'>('login');
+  email = signal('');
+  password = signal('');
+  newPassword = signal('');
+  resetCode = signal('');
+  loading = signal(false);
+  errorMsg = signal('');
+  successMsg = signal('');
 
   getValue(event: Event): string {
     return (event.target as HTMLInputElement).value;
   }
 
   async signIn(): Promise<void> {
-    this.loading = true;
-    this.errorMsg = '';
+    this.loading.set(true);
+    this.errorMsg.set('');
     try {
-      await this.auth.signIn(this.email, this.password);
-      if (!this.auth.needsNewPassword) {
+      await this.auth.signIn(this.email(), this.password());
+      if (!this.auth.needsNewPassword()) {
         this.router.navigate(['/']);
       }
     } catch (err: any) {
-      this.errorMsg = err.message || 'Sign in failed';
+      this.errorMsg.set(err.message || 'Sign in failed');
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
   async completeNewPassword(): Promise<void> {
-    this.loading = true;
-    this.errorMsg = '';
+    this.loading.set(true);
+    this.errorMsg.set('');
     try {
-      await this.auth.completeNewPassword(this.newPassword);
+      await this.auth.completeNewPassword(this.newPassword());
       this.router.navigate(['/']);
     } catch (err: any) {
-      this.errorMsg = err.message || 'Failed to set password';
+      this.errorMsg.set(err.message || 'Failed to set password');
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
   async requestResetCode(): Promise<void> {
-    this.loading = true;
-    this.errorMsg = '';
-    this.successMsg = '';
+    this.loading.set(true);
+    this.errorMsg.set('');
+    this.successMsg.set('');
     try {
-      await this.auth.forgotPassword(this.email);
-      this.view = 'forgotConfirm';
-      this.successMsg = 'Verification code sent to your email.';
+      await this.auth.forgotPassword(this.email());
+      this.view.set('forgotConfirm');
+      this.successMsg.set('Verification code sent to your email.');
     } catch (err: any) {
-      this.errorMsg = err.message || 'Failed to send code';
+      this.errorMsg.set(err.message || 'Failed to send code');
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 
   async confirmResetPassword(): Promise<void> {
-    this.loading = true;
-    this.errorMsg = '';
-    this.successMsg = '';
+    this.loading.set(true);
+    this.errorMsg.set('');
+    this.successMsg.set('');
     try {
-      await this.auth.confirmPassword(this.resetCode, this.newPassword);
-      this.view = 'login';
-      this.successMsg = 'Password reset successfully. Sign in with your new password.';
-      this.resetCode = '';
-      this.newPassword = '';
+      await this.auth.confirmPassword(this.resetCode(), this.newPassword());
+      this.view.set('login');
+      this.successMsg.set('Password reset successfully. Sign in with your new password.');
+      this.resetCode.set('');
+      this.newPassword.set('');
     } catch (err: any) {
-      this.errorMsg = err.message || 'Failed to reset password';
+      this.errorMsg.set(err.message || 'Failed to reset password');
     } finally {
-      this.loading = false;
+      this.loading.set(false);
     }
   }
 }

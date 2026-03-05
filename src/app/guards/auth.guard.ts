@@ -10,12 +10,12 @@ export const authGuard: CanActivateFn = () => {
   if (!auth['userPool']) return true;
 
   // Wait for session restore to finish
-  if (auth.isLoading) {
+  if (auth.isLoading()) {
     return new Promise<boolean>((resolve) => {
       const check = setInterval(() => {
-        if (!auth.isLoading) {
+        if (!auth.isLoading()) {
           clearInterval(check);
-          if (auth.isAuthenticated) {
+          if (auth.isAuthenticated()) {
             resolve(true);
           } else {
             router.navigate(['/login']);
@@ -26,7 +26,7 @@ export const authGuard: CanActivateFn = () => {
     });
   }
 
-  if (auth.isAuthenticated) return true;
+  if (auth.isAuthenticated()) return true;
 
   router.navigate(['/login']);
   return false;
