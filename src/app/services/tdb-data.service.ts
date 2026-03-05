@@ -18,7 +18,7 @@ export class TdbDataService {
 
   constructor(private http: HttpClient) {
     this.data$ = this.http
-      .get<TdbDatabase>('assets/data/tdb-requests.json')
+      .get<TdbDatabase>('data/tdb-requests.json')
       .pipe(shareReplay(1));
   }
 
