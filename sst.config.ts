@@ -16,8 +16,7 @@ export default $config({
   },
   async run() {
     const sharedPoolId = "us-east-1_aDNcmvxfv";
-    // TODO: Replace with actual Client ID after deploying cernertools repo
-    const tdbExplorerClientId = "PLACEHOLDER_UNTIL_DEPLOY";
+    const tdbExplorerClientId = "36jg3qtq3v8478mku758201ifm";
 
     new sst.aws.StaticSite("TdbExplorerSite", {
       build: {
