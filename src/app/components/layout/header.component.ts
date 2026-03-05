@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TdbDataService } from '../../services/tdb-data.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-header',
@@ -29,6 +30,10 @@ import { TdbDataService } from '../../services/tdb-data.service';
         </nav>
       </div>
       <div class="header-right">
+        <div class="auth-controls" *ngIf="auth.isAuthenticated$ | async">
+          <span class="auth-email">{{ (auth.currentUser$ | async)?.email }}</span>
+          <button class="sign-out-btn" (click)="signOut()">Sign Out</button>
+        </div>
         <div class="search-wrapper">
           <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/>
@@ -104,7 +109,31 @@ import { TdbDataService } from '../../services/tdb-data.service';
       background: var(--surface-2);
     }
     .header-right {
-      flex: 0 1 360px;
+      display: flex;
+      align-items: center;
+      gap: var(--sp-4);
+      flex: 0 1 auto;
+    }
+    .auth-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-3);
+      white-space: nowrap;
+    }
+    .auth-email {
+      font-size: 0.75rem;
+      color: var(--ink-muted);
+    }
+    .sign-out-btn {
+      font-size: 0.75rem;
+      color: var(--ink-muted);
+      background: none;
+      border: none;
+      cursor: pointer;
+      transition: color 0.12s;
+    }
+    .sign-out-btn:hover {
+      color: var(--accent);
     }
     .search-wrapper {
       position: relative;
@@ -153,7 +182,7 @@ import { TdbDataService } from '../../services/tdb-data.service';
 export class HeaderComponent {
   searchTerm = '';
 
-  constructor(private dataService: TdbDataService, private router: Router) {}
+  constructor(public auth: AuthService, private dataService: TdbDataService, private router: Router) {}
 
   onSearch(term: string): void {
     this.dataService.setSearchTerm(term);
@@ -163,5 +192,10 @@ export class HeaderComponent {
     if (this.searchTerm.trim()) {
       this.router.navigate(['/'], { queryParams: { q: this.searchTerm.trim() } });
     }
+  }
+
+  signOut(): void {
+    this.auth.signOut();
+    this.router.navigate(['/login']);
   }
 }
